@@ -16,3 +16,7 @@ export function signToken(payload: object) {
     expiresIn: JWT_EXPIRES_IN as jwt.SignOptions['expiresIn']
   });
 }
+
+export function verifyToken<T = any>(token: string): T {
+  return jwt.verify(token, JWT_SECRET) as T;
+}
