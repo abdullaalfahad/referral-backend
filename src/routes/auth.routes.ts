@@ -1,36 +1,8 @@
 import { Router } from "express";
+import { register, } from "../controllers/auth.controller";
 
 const router = Router();
 
-/**
- * @swagger
- * /api/auth/register:
- *   post:
- *     summary: Register a new user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *               name:
- *                 type: string
- *               referralCode:
- *                 type: string
- *     responses:
- *       201:
- *         description: User created successfully
- *       400:
- *         description: Invalid input
- */
-router.post("/register", (req, res) => {
-  res.json({ message: "example register" });
-});
+router.post("/register", register);
 
 export default router;
