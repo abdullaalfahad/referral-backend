@@ -109,3 +109,32 @@ export const getMyReferrals = async (req: any, res: Response) => {
   }
 };
 
+
+/**
+ * @swagger
+ * /api/referrals/leaderboard:
+ *   get:
+ *     summary: Get top referrers leaderboard
+ *     tags: [Referrals]
+ *     responses:
+ *       200:
+ *         description: Returns top referrers
+ */
+export const getLeaderboard = async (_req: Request, res: Response) => {
+  try {
+    const topReferrers = await User.find({})
+      .sort({ credits: -1 }) 
+      .limit(10)
+      .select("name email credits referralsCount referralCode");
+
+    res.json({
+      message: "Top referrers",
+      leaderboard: topReferrers,
+    });
+  } catch (error) {
+    console.error("getLeaderboard Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
