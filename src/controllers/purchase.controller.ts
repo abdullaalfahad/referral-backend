@@ -5,9 +5,16 @@ import { User } from "../models/user";
 
 /**
  * @swagger
+ * tags:
+ *   name: Purchases
+ *   description: Handle user purchases and referral rewards
+ */
+
+/**
+ * @swagger
  * /api/purchases:
  *   post:
- *     summary: Simulate a purchase and reward referrer/referred if eligible
+ *     summary: Simulate a purchase and reward referrer/referred on the first purchase
  *     tags: [Purchases]
  *     security:
  *       - bearerAuth: []
@@ -23,41 +30,50 @@ import { User } from "../models/user";
  *                 example: 49.99
  *     responses:
  *       201:
- *         description: Purchase successful and rewards applied (if applicable)
+ *         description: Purchase successful and rewards applied if first purchase
  *       400:
- *         description: Invalid amount or duplicate purchase
+ *         description: Invalid amount
  */
 export const createPurchase = async (req: any, res: Response) => {
   try {
     const { amount } = req.body;
     const userId = req.user.id;
 
-    if (!amount || amount <= 0)
+    if (!amount || amount <= 0) {
       return res.status(400).json({ message: "Invalid purchase amount" });
-
-    const existing = await Purchase.findOne({ user: userId });
-    if (existing)
-      return res.status(400).json({ message: "User already made a purchase" });
+    }
 
     const purchase = await Purchase.create({ user: userId, amount });
 
-    const referral = await Referral.findOne({ referred: userId, status: "pending" });
-    if (referral) {
-      referral.status = "converted";
-      referral.convertedAt = new Date();
-      await referral.save();
+    const purchaseCount = await Purchase.countDocuments({ user: userId });
 
-      const referrer = await User.findById(referral.referrer);
-      const referred = await User.findById(referral.referred);
+    if (purchaseCount === 1) {
+      const referral = await Referral.findOne({
+        referred: userId,
+        status: "pending",
+      });
 
-      if (referrer) referrer.credits += 2;
-      if (referred) referred.credits += 2;
+      if (referral) {
+        referral.status = "converted";
+        referral.convertedAt = new Date();
+        await referral.save();
 
-      await Promise.all([referrer?.save(), referred?.save()]);
+        const referrer = await User.findById(referral.referrer);
+        const referred = await User.findById(referral.referred);
+
+       
+        if (referrer) referrer.credits += 2;
+        if (referred) referred.credits += 2;
+
+        await Promise.all([referrer?.save(), referred?.save()]);
+      }
     }
 
     res.status(201).json({
-      message: "Purchase successful",
+      message:
+        purchaseCount === 1
+          ? "Purchase successful — referral reward applied"
+          : "Purchase successful",
       purchase,
     });
   } catch (error) {
