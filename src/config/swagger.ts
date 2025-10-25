@@ -11,6 +11,10 @@ const swaggerDefinition = {
   },
   servers: [
     {
+      url: "https://referral-backend-69kc.onrender.com",
+      description: "Production server",
+    },
+    {
       url: "http://localhost:4000",
       description: "Development server",
     },
